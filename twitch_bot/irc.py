@@ -4,6 +4,7 @@ import logging
 import re
 
 import cfg
+from twitch_bot import exception
 from twitch_bot import utils
 
 LOG = logging.getLogger('debug')
@@ -40,14 +41,6 @@ class Message(object):
         :return: True if the byte sequence is a ping, False otherwise
         """
         return byte == Message.PING
-
-
-class UnknownCommandException(Exception):
-    """ Unknown command exception """
-
-
-class WrongArgumentException(Exception):
-    """ Wrong argument exception """
 
 
 class Command(abc.ABC):
@@ -97,13 +90,13 @@ class Command(abc.ABC):
         args = matched.group(2).split()
         for arg in args:
             if arg[0] in Command.BANNED_PREFIX:
-                raise WrongArgumentException
+                raise exception.WrongArgumentException
         try:
             command_class = Command.VALID_COMMANDS[command]
             return command_class(message.author, command, args)
         except KeyError:
             LOG.error("Unknown command '{command}'".format(command=command))
-            raise UnknownCommandException
+            raise exception.UnknownCommandException
 
     @abc.abstractmethod
     def process(self):
