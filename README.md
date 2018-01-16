@@ -11,7 +11,7 @@ The account nickname will be the name used by the bot.
 
 Connect to twitch using the bot account and generate a chat token for the bot
 
-https://www.twitchtools.com/chat-token
+https://twitchapps.com/tmi/
 
 ### Setup environment (Python 3.5+ required)
 
