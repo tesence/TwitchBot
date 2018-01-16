@@ -28,23 +28,21 @@ class Pyramid(irc.Command):
         size = cfg.DEFAULT_PYRAMID_SIZE
         symbol = cfg.DEFAULT_PYRAMID_SYMBOL
 
-        if len(self.args):
-            if len(self.args) == 1:
-                if self.args[0].isdigit():
-                    size = Pyramid._size_threshold(self.args[0])
-                else:
-                    symbol = self.args[0]
+        if not len(self.args):
+            pass
+        elif len(self.args) == 1:
+            if self.args[0].isdigit():
+                size = Pyramid._size_threshold(self.args[0])
             else:
-                if self.args[0].isdigit():
-                    size = Pyramid._size_threshold(self.args[0])
-                    symbol = self.args[1]
-                elif self.args[1].isdigit():
-                    size = Pyramid._size_threshold(self.args[1])
-                    symbol = self.args[0]
+                symbol = self.args[0]
+        elif len(self.args) == 2:
+            symbol = self.args[0]
+            if self.args[1].isdigit():
+                size = Pyramid._size_threshold(self.args[1])
 
-        LOG.debug("{author} has sent a pyramid (size:{size}|symbol:{symbol})".format(author=self.author,
-                                                                                     size=size,
-                                                                                     symbol=symbol))
+        LOG.debug("{author} has requested a pyramid with the args [{args}], "
+                  "sending pyramid (symbol={symbol},size={size})"
+                  .format(author=self.author, args=",".join(self.args), symbol=symbol, size=size))
         pyramid = []
         for i in range(2 * size - 1):
             block = [symbol] * (i + 1 if i < size else 2 * size - (i + 1))
