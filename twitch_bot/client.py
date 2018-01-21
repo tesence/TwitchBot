@@ -6,7 +6,8 @@ import socket
 import cfg
 
 from twitch_bot import exception
-from twitch_bot.irc import Command, Message
+from twitch_bot.irc import Message
+from twitch_bot.commands.base import Command
 from twitch_bot import utils
 
 LOG = logging.getLogger('debug')
@@ -30,7 +31,7 @@ class IRCClient(object):
         self._socket.send(bytes("PASS {password}\r\n".format(password=cfg.PASS), "utf-8"))
         self._socket.send(bytes("NICK {nickname}\r\n".format(nickname=cfg.NICK), "utf-8"))
         self._socket.send(bytes("JOIN #{channel}\r\n".format(channel=cfg.CHAN), "utf-8"))
-        LOG.debug("Client connected")
+        LOG.debug("Client connected to {channel_name}".format(channel_name=cfg.CHAN))
 
     async def send(self, message):
         """ Send a message to the server.

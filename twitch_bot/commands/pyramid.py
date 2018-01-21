@@ -1,12 +1,12 @@
 import logging
 
 import cfg
-from twitch_bot import irc
+from twitch_bot.commands import base
 
 LOG = logging.getLogger('debug')
 
 
-class Pyramid(irc.Command):
+class Pyramid(base.Command):
     """ Static class to build a pyramid. """
 
     MAX_SIZE = 5
