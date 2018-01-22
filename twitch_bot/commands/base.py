@@ -23,7 +23,7 @@ class Command(abc.ABC):
         self.args = args
 
     @staticmethod
-    def load_commands():
+    async def load_commands():
         """ Load all the IRC commands """
         source_dirname = utils.get_source_dirname()
         commands_dirname = "commands"

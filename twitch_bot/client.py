@@ -21,11 +21,10 @@ class IRCClient(object):
     def __init__(self):
         self._socket = socket.socket()
         self._mod_list = {}
-        Command.load_commands()
 
     # BOT COMMANDS #
 
-    def connect(self):
+    def _connect(self):
         """ Connect to the channel. """
         self._socket.connect((cfg.HOST, cfg.PORT))
         self._socket.send(bytes("PASS {password}\r\n".format(password=cfg.PASS), "utf-8"))
@@ -33,31 +32,46 @@ class IRCClient(object):
         self._socket.send(bytes("JOIN #{channel}\r\n".format(channel=cfg.CHAN), "utf-8"))
         LOG.debug("Client connected to {channel_name}".format(channel_name=cfg.CHAN))
 
-    async def send(self, message):
+    async def start(self, loop):
+        """ Start all the underlying tasks """
+
+        self._connect()
+
+        # Load all the resources
+        tasks = [
+            Command.load_commands(),
+        ]
+        await asyncio.gather(*tasks)
+
+        # Run the main tasks
+        asyncio.ensure_future(self._fill_mod_list())
+        asyncio.ensure_future(loop.run_in_executor(None, self._listen))
+
+    def send(self, message):
         """ Send a message to the server.
         :param message: the message to send
         """
         self._socket.send(bytes("{message}\r\n".format(message=message), "utf-8"))
 
-    async def send_message(self, message):
+    def send_message(self, message):
         """ Send a private message to the server.
         :param message: the message to send
         """
-        await self.send("PRIVMSG #{channel} :{message}".format(channel=cfg.CHAN, message=message))
+        self.send("PRIVMSG #{channel} :{message}".format(channel=cfg.CHAN, message=message))
 
-    async def ban(self, user):
+    def ban(self, user):
         """ Ban a user from the channel.
         :param user: The user to ban
         """
-        await self.send_message(".ban {user}".format(user=user))
+        self.send_message(".ban {user}".format(user=user))
         LOG.debug("%s has been banned", user)
 
-    async def timeout(self, user, seconds=600):
+    def timeout(self, user, seconds=600):
         """ Ban a user from the channel.
         :param user: The user to ban
         :param seconds: the length of the timeout in seconds (default 600)
         """
-        await self.send_message(".timeout {user} {seconds}".format(user=user, seconds=seconds))
+        self.send_message(".timeout {user} {seconds}".format(user=user, seconds=seconds))
         LOG.debug("%s has been timed out for %ss", user, seconds)
 
     def _is_mod(self, username):
@@ -67,7 +81,7 @@ class IRCClient(object):
         """
         return username in itertools.chain(self._mod_list.values())
 
-    async def fill_mod_list(self):
+    async def _fill_mod_list(self):
         """ Fill the only moderators list periodically (every 10s). """
         while True:
             try:
@@ -80,17 +94,17 @@ class IRCClient(object):
                 LOG.warning("Cannot retrieve stream chatters information")
             await asyncio.sleep(10)
 
-    async def listen(self):
+    def _listen(self):
         """ Keep reading in the socket for new messages. """
         while True:
             received = self._socket.recv(1024).decode("utf-8").rstrip()
             if not len(received) == 0:
-                await self._handle_message(received)
+                self._handle_message(received)
             else:
                 LOG.error("The bot has been disconnected, reconnecting...")
-                self.connect()
+                self._connect()
 
-    async def _handle_message(self, bytes):
+    def _handle_message(self, bytes):
         """ Check for private messages and commands
 
         :param bytes: byte sequence
@@ -98,7 +112,7 @@ class IRCClient(object):
         raw_messages = bytes.split('\n')
         for raw_message in raw_messages:
             if Message.is_ping(raw_message):
-                await self.send(Message.PONG)
+                self.send(Message.PONG)
             elif Message.is_message(raw_message):
                 message = Message(raw_message)
                 if Command.is_command(message):
@@ -106,7 +120,7 @@ class IRCClient(object):
                         command = Command.get_command(message)
                         command_result = command.process()
                         for part in command_result:
-                            await self.send_message(part)
+                            self.send_message(part)
                     except (exception.UnknownCommandException,
                             exception.WrongArgumentException):
                         pass

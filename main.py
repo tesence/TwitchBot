@@ -14,11 +14,9 @@ sys.path.append('twitch_bot')
 def main():
 
     irc_client = client.IRCClient()
-    irc_client.connect()
 
     loop = asyncio.get_event_loop()
-    asyncio.ensure_future(irc_client.listen(), loop=loop)
-    asyncio.ensure_future(irc_client.fill_mod_list(), loop=loop)
+    asyncio.ensure_future(irc_client.start(loop))
     loop.run_forever()
 
 
