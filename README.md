@@ -49,6 +49,8 @@ VALID_COMMANDS = ["pyramid"]
 
 DEFAULT_PYRAMID_SYMBOL = <default pyramid char>
 DEFAULT_PYRAMID_SIZE = <default pyramid size>  # size is thresholded at 5
+
+FOLLOW_MESSAGE = "Thank you {} for the follow!"
 ```
 ### Run the bot
 

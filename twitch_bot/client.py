@@ -8,6 +8,7 @@ import cfg
 from twitch_bot import exception
 from twitch_bot.irc import Message
 from twitch_bot.commands.base import Command
+from twitch_bot.events.base import Event
 from twitch_bot import utils
 
 LOG = logging.getLogger('debug')
@@ -40,6 +41,7 @@ class IRCClient(object):
         # Load all the resources
         tasks = [
             Command.load_commands(),
+            Event.load_events(self)
         ]
         await asyncio.gather(*tasks)
 
