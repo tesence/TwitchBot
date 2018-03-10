@@ -2,6 +2,7 @@
 
 A Twitch IRC Bot based on asynchronous programming (asyncio)
 - Sends pyramids
+- Sends follow alerts
 
 ### Create a Twitch account for the bot
 
@@ -49,6 +50,12 @@ VALID_COMMANDS = ["pyramid"]
 
 DEFAULT_PYRAMID_SYMBOL = <default pyramid char>
 DEFAULT_PYRAMID_SIZE = <default pyramid size>  # size is thresholded at 5
+
+VALID_EVENTS = ["follows"]
+
+TWITCH_API_URL = "https://api.twitch.tv/kraken/"
+TWITCH_API_ACCEPT = "application/vnd.twitchtv.v5+json"
+TWITCH_API_CLIENT_ID = <twitch client id>
 
 FOLLOW_MESSAGE = "Thank you {} for the follow!"
 ```
