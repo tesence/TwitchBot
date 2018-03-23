@@ -40,23 +40,25 @@ Create the file `cfg.py` at the root of the project directory and fill it as fol
 # cfg.py
 # Configurations variables
 
-HOST = "irc.twitch.tv"
-PORT = 6667
-NICK = <bot name in lowercase>
-PASS = <chat token>
-CHAN = <channel the bot will be connected to in lowercase>
+# TWITCH IRC
+TWITCH_IRC_HOST = "irc.twitch.tv"
+TWITCH_IRC_PORT = 6667
+TWITCH_IRC_BOTNAME = <bot name in lowercase>
+TWITCH_IRC_PASSWORD = <chat token>
+TWITCH_IRC_CHANNEL = <channel the bot will be connected to in lowercase>
 
-VALID_COMMANDS = ["pyramid"]
-
-DEFAULT_PYRAMID_SYMBOL = <default pyramid char>
-DEFAULT_PYRAMID_SIZE = <default pyramid size>  # size is thresholded at 5
-
-VALID_EVENTS = ["follows"]
-
+# TWITCH API
 TWITCH_API_URL = "https://api.twitch.tv/kraken/"
 TWITCH_API_ACCEPT = "application/vnd.twitchtv.v5+json"
 TWITCH_API_CLIENT_ID = <twitch client id>
 
+# COMMANDS
+VALID_COMMANDS = ["pyramid"]
+DEFAULT_PYRAMID_SYMBOL = <default pyramid char>
+DEFAULT_PYRAMID_SIZE = <default pyramid size>  # size is thresholded at 5
+
+# EVENTS
+VALID_EVENTS = ["follows"]
 FOLLOW_MESSAGE = "Thank you {} for the follow!"
 ```
 ### Run the bot

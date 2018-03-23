@@ -26,16 +26,16 @@ class Follows(base.Event):
     @staticmethod
     async def _get_id():
         url = "{twitch_api_url}/users?login={channel_name}"\
-              .format(twitch_api_url=cfg.TWITCH_API_URL, channel_name=cfg.CHAN)
+              .format(twitch_api_url=cfg.TWITCH_API_URL, channel_name=cfg.TWITCH_IRC_CHANNEL)
         try:
             body = await utils.request(url, headers=Follows.HEADERS)
             channel_id = body['users'][0]['_id']
         except (KeyError, TypeError) as e:
             LOG.error("Cannot parse retrieved id for {channel_name} ({message})"
-                      .format(channel_name=cfg.CHAN, message=e.args))
+                      .format(channel_name=cfg.TWITCH_IRC_CHANNEL, message=e.args))
         else:
             LOG.debug("API data for {channel_name}: {data} ({url})"
-                      .format(channel_name=cfg.CHAN, data=body['users'], url=url))
+                      .format(channel_name=cfg.TWITCH_IRC_CHANNEL, data=body['users'], url=url))
 
             Follows.id = channel_id
 
@@ -54,10 +54,10 @@ class Follows(base.Event):
             ]
         except (KeyError, TypeError) as e:
             LOG.error("Cannot parse retrieved followers for {channel_name} ({message})"
-                      .format(channel_name=cfg.CHAN, message=e.args))
+                      .format(channel_name=cfg.TWITCH_IRC_CHANNEL, message=e.args))
         else:
             LOG.debug("API data for {channel_name}: {data} ({url})"
-                      .format(channel_name=cfg.CHAN, data=body, url=url))
+                      .format(channel_name=cfg.TWITCH_IRC_CHANNEL, data=body, url=url))
             return follows
 
     @staticmethod

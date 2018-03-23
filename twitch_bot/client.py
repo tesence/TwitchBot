@@ -17,7 +17,7 @@ LOG = logging.getLogger('debug')
 class IRCClient(object):
     """ Client to interact with the chat. """
 
-    CHAT_URL = "https://tmi.twitch.tv/group/user/{user}/chatters".format(user=cfg.CHAN.lower())
+    CHAT_URL = "https://tmi.twitch.tv/group/user/{user}/chatters".format(user=cfg.TWITCH_IRC_CHANNEL.lower())
 
     def __init__(self):
         self._socket = socket.socket()
@@ -27,11 +27,11 @@ class IRCClient(object):
 
     def _connect(self):
         """ Connect to the channel. """
-        self._socket.connect((cfg.HOST, cfg.PORT))
-        self._socket.send(bytes("PASS {password}\r\n".format(password=cfg.PASS), "utf-8"))
-        self._socket.send(bytes("NICK {nickname}\r\n".format(nickname=cfg.NICK), "utf-8"))
-        self._socket.send(bytes("JOIN #{channel}\r\n".format(channel=cfg.CHAN), "utf-8"))
-        LOG.debug("Client connected to {channel_name}".format(channel_name=cfg.CHAN))
+        self._socket.connect((cfg.TWITCH_IRC_HOST, cfg.TWITCH_IRC_PORT))
+        self._socket.send(bytes("PASS {password}\r\n".format(password=cfg.TWITCH_IRC_PASSWORD), "utf-8"))
+        self._socket.send(bytes("NICK {nickname}\r\n".format(nickname=cfg.TWITCH_IRC_BOTNAME), "utf-8"))
+        self._socket.send(bytes("JOIN #{channel}\r\n".format(channel=cfg.TWITCH_IRC_CHANNEL), "utf-8"))
+        LOG.debug("Client connected to {channel_name}".format(channel_name=cfg.TWITCH_IRC_CHANNEL))
 
     async def start(self, loop):
         """ Start all the underlying tasks """
@@ -59,7 +59,7 @@ class IRCClient(object):
         """ Send a private message to the server.
         :param message: the message to send
         """
-        self.send("PRIVMSG #{channel} :{message}".format(channel=cfg.CHAN, message=message))
+        self.send("PRIVMSG #{channel} :{message}".format(channel=cfg.TWITCH_IRC_CHANNEL, message=message))
 
     def ban(self, user):
         """ Ban a user from the channel.
