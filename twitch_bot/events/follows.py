@@ -73,7 +73,7 @@ class Follows(base.Event):
                 if new_follows:
                     LOG.debug("New follows found: %s", new_follows)
                     new_follows_string = Follows._format_follower_list(new_follows)
-                    irc_client.send_message("/me " + cfg.FOLLOW_MESSAGE.format(new_follows_string))
+                    await irc_client.send_message("/me " + cfg.FOLLOW_MESSAGE.format(new_follows_string))
                     Follows.follows = follows
 
             await asyncio.sleep(10)

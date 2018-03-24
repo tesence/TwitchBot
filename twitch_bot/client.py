@@ -1,10 +1,8 @@
 import asyncio
 import itertools
 import logging
-import socket
 
 import cfg
-
 from twitch_bot import exception
 from twitch_bot.irc import Message
 from twitch_bot.commands.base import Command
@@ -20,60 +18,58 @@ class IRCClient(object):
     CHAT_URL = "https://tmi.twitch.tv/group/user/{user}/chatters".format(user=cfg.TWITCH_IRC_CHANNEL.lower())
 
     def __init__(self):
-        self._socket = socket.socket()
         self._mod_list = {}
 
     # BOT COMMANDS #
 
-    def _connect(self):
+    async def _connect(self, loop):
         """ Connect to the channel. """
-        self._socket.connect((cfg.TWITCH_IRC_HOST, cfg.TWITCH_IRC_PORT))
-        self._socket.send(bytes("PASS {password}\r\n".format(password=cfg.TWITCH_IRC_PASSWORD), "utf-8"))
-        self._socket.send(bytes("NICK {nickname}\r\n".format(nickname=cfg.TWITCH_IRC_BOTNAME), "utf-8"))
-        self._socket.send(bytes("JOIN #{channel}\r\n".format(channel=cfg.TWITCH_IRC_CHANNEL), "utf-8"))
+        connection = await asyncio.open_connection(host=cfg.TWITCH_IRC_HOST, port=cfg.TWITCH_IRC_PORT, loop=loop)
+        self.reader, self.writer = connection
+        self.writer.write(bytes("PASS {password}\r\n".format(password=cfg.TWITCH_IRC_PASSWORD), "utf-8"))
+        self.writer.write(bytes("NICK {nickname}\r\n".format(nickname=cfg.TWITCH_IRC_BOTNAME), "utf-8"))
+        self.writer.write(bytes("JOIN #{channel}\r\n".format(channel=cfg.TWITCH_IRC_CHANNEL), "utf-8"))
         LOG.debug("Client connected to {channel_name}".format(channel_name=cfg.TWITCH_IRC_CHANNEL))
 
     async def start(self, loop):
         """ Start all the underlying tasks """
 
-        self._connect()
+        await self._connect(loop)
 
         # Load all the resources
         tasks = [
             Command.load_commands(),
-            Event.load_events(self)
+            Event.load_events(self),
+            self._fill_mod_list(),
+            self._listen(loop)
         ]
         await asyncio.gather(*tasks)
 
-        # Run the main tasks
-        asyncio.ensure_future(self._fill_mod_list())
-        asyncio.ensure_future(loop.run_in_executor(None, self._listen))
-
-    def send(self, message):
+    async def send(self, message):
         """ Send a message to the server.
         :param message: the message to send
         """
-        self._socket.send(bytes("{message}\r\n".format(message=message), "utf-8"))
+        self.writer.write(bytes("{message}\r\n".format(message=message), "utf-8"))
 
-    def send_message(self, message):
+    async def send_message(self, message):
         """ Send a private message to the server.
         :param message: the message to send
         """
-        self.send("PRIVMSG #{channel} :{message}".format(channel=cfg.TWITCH_IRC_CHANNEL, message=message))
+        await self.send("PRIVMSG #{channel} :{message}".format(channel=cfg.TWITCH_IRC_CHANNEL, message=message))
 
-    def ban(self, user):
+    async def ban(self, user):
         """ Ban a user from the channel.
         :param user: The user to ban
         """
-        self.send_message(".ban {user}".format(user=user))
+        await self.send_message(".ban {user}".format(user=user))
         LOG.debug("%s has been banned", user)
 
-    def timeout(self, user, seconds=600):
+    async def timeout(self, user, seconds=600):
         """ Ban a user from the channel.
         :param user: The user to ban
         :param seconds: the length of the timeout in seconds (default 600)
         """
-        self.send_message(".timeout {user} {seconds}".format(user=user, seconds=seconds))
+        await self.send_message(".timeout {user} {seconds}".format(user=user, seconds=seconds))
         LOG.debug("%s has been timed out for %ss", user, seconds)
 
     def _is_mod(self, username):
@@ -96,17 +92,17 @@ class IRCClient(object):
                 LOG.warning("Cannot retrieve stream chatters information")
             await asyncio.sleep(10)
 
-    def _listen(self):
+    async def _listen(self, loop):
         """ Keep reading in the socket for new messages. """
         while True:
-            received = self._socket.recv(1024).decode("utf-8").rstrip()
+            received = (await self.reader.read(1024)).decode("utf-8").rstrip()
             if not len(received) == 0:
-                self._handle_message(received)
+                await self._handle_message(received)
             else:
                 LOG.error("The bot has been disconnected, reconnecting...")
-                self._connect()
+                await self._connect(loop)
 
-    def _handle_message(self, bytes):
+    async def _handle_message(self, bytes):
         """ Check for private messages and commands
 
         :param bytes: byte sequence
@@ -114,7 +110,7 @@ class IRCClient(object):
         raw_messages = bytes.split('\n')
         for raw_message in raw_messages:
             if Message.is_ping(raw_message):
-                self.send(Message.PONG)
+                await self.send(Message.PONG)
             elif Message.is_message(raw_message):
                 message = Message(raw_message)
                 if Command.is_command(message):
@@ -122,7 +118,7 @@ class IRCClient(object):
                         command = Command.get_command(message)
                         command_result = command.process()
                         for part in command_result:
-                            self.send_message(part)
+                            await self.send_message(part)
                     except (exception.UnknownCommandException,
                             exception.WrongArgumentException):
                         pass
