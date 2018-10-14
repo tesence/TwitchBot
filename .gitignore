@@ -1,0 +1,10 @@
+# temp files
+__pycache__/
+
+# project files
+/.venv/
+/.idea/
+
+# excluded files
+config.py
+
