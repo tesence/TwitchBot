@@ -1,0 +1,5 @@
+aiohttp
+pyyaml
+sanic
+
+git+https://github.com/MysterialPy/TwitchIO.git

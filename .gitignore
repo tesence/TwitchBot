@@ -5,6 +5,8 @@ __pycache__/
 /.venv/
 /.idea/
 
+/etc/
+/log/
+
 # excluded files
 config.py
-
